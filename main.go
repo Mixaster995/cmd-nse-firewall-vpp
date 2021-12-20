@@ -186,7 +186,6 @@ func main() {
 	vppConn, vppErrCh := vpphelper.StartAndDialContext(ctx)
 	exitOnErr(ctx, cancel, vppErrCh)
 
-	netNsInfo := memif.NewNetNSInfo()
 	firewallEndpoint := new(struct{ endpoint.Endpoint })
 	firewallEndpoint.Endpoint = endpoint.NewServer(ctx,
 		spiffejwt.TokenGeneratorFunc(source, config.MaxTokenLifetime),
@@ -200,7 +199,7 @@ func main() {
 			xconnect.NewServer(vppConn),
 			acl.NewServer(vppConn, config.ACLConfig),
 			mechanisms.NewServer(map[string]networkservice.NetworkServiceServer{
-				memif.MECHANISM: chain.NewNetworkServiceServer(memif.NewServer(ctx, vppConn, netNsInfo)),
+				memif.MECHANISM: chain.NewNetworkServiceServer(memif.NewServer(ctx, vppConn)),
 			}),
 			connect.NewServer(
 				client.NewClient(
@@ -214,7 +213,7 @@ func main() {
 						replacelabels.NewClient(config.Labels),
 						up.NewClient(ctx, vppConn),
 						xconnect.NewClient(vppConn),
-						memif.NewClient(vppConn, netNsInfo),
+						memif.NewClient(vppConn),
 						sendfd.NewClient(),
 						recvfd.NewClient(),
 					)),
